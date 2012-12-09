@@ -1,0 +1,3 @@
+-- Destaticize SsimUtils to allow polymorphism in the image scaling department.
+-- Use ImageReaders / ImageWriters directly rather than relying upon ImageIO
+   convenience methods, so we can listen for and log non-fatal problems.

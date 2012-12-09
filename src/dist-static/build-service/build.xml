@@ -1,0 +1,47 @@
+<project name="custom-ssim-webapp" default="war">
+
+    <property file="build.properties" />
+
+    <property name="src.dir"          value="src" />
+    <property name="build.dir"        value="build" />
+    <property name="dist.dir"         value="dist" />
+    <property name="ssim.lib.dir"     value="../lib" />
+    <property name="war.file.name"    value="${web.app.name}.war" />
+    
+    <target name="init">
+      <fail unless="web.app.name" />
+      <mkdir dir="${build.dir}"/>
+      <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <target name="clean">
+      <delete dir="${build.dir}"/>
+      <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="war" depends="init">
+      <copy toDir="${build.dir}">
+	<fileset dir="${src.dir}" />
+        <filterchain>
+          <replacetokens>
+	    <token key="web.app.name" value="${web.app.name}"/>
+	    <token key="allowDomains.init.param" value="${allowDomains.init.param}"/>
+	    <token key="baseResourcePath.init.param" value="${baseResourcePath.init.param}"/>
+	    <token key="baseUrl.init.param" value="${baseUrl.init.param}"/>
+	    <token key="cacheDir.init.param" value="${cacheDir.init.param}"/>
+	    <token key="cacheSize.init.param" value="${cacheSize.init.param}"/>
+	    <token key="cullDelay.init.param" value="${cullDelay.init.param}"/>
+	    <token key="maxWidth.init.param" value="${maxWidth.init.param}"/>
+	    <token key="maxHeight.init.param" value="${maxHeight.init.param}"/>
+          </replacetokens>
+	  <linecontainsregexp>
+	    <regexp pattern="^(?!.*\$\{.*\}).*?$" /> <!-- match any line without ${...} anywhere in it -->
+	  </linecontainsregexp>
+        </filterchain>
+      </copy>
+      <jar destfile="${dist.dir}/${war.file.name}">
+        <fileset dir="${build.dir}" />
+	<zipfileset prefix="WEB-INF/lib" dir="${ssim.lib.dir}" includes="*.jar" />
+      </jar>
+    </target>
+</project>

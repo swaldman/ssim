@@ -1,0 +1,18 @@
+0.6.0
+  -- added a maxConcurrency init-param to SsimServlet to avoid OutOfMemoryErrors
+     when a client makes a request for many scaled images simultaneously (as often happens
+     on the first load of a "contact sheet"-style photo album).
+  -- added cacheUnmodified(...) check to "short path", so that we cache even unscaled images
+     that are not local to the webapp.
+  -- defined a web-app scope key that SsimServlet checks, where other entities in a web-app
+     can set up a PatternReplaceMap to override the default URI that the servlet will use
+     to find the original image. (This is useful for web-apps that will want SSIMServlet to
+     manage both images internal and external to the web-app).
+0.5.0
+  -- creates pseudosuffixes for webapps that want to control which graphics are scalable (sjpg, jpeg, sgif, spng, stiff, stif)
+  -- let ImageData include when possible file size information, for proper content-length setting
+  -- define better encoding for filename (so that two files, where one is analogously defined in a subdirectory 
+     that the other has in its name delimited by '.' don't conflict)
+  -- allow the size of the cache directory to be limited, and provide user defined maximum sizes, to prevent the size of 
+     the cache directory from growing arbitrarily large and to discourage denial-of-service attacks
+

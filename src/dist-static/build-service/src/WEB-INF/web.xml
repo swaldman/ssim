@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+          PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+          "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+  <display-name>@web.app.name@</display-name>
+  
+  <servlet>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <servlet-class>com.mchange.v2.ssim.SsimServlet</servlet-class>
+    
+    <!-- init params -->
+    <init-param><param-name>allowDomains</param-name><param-value>@allowDomains.init.param@</param-value></init-param>
+    <init-param><param-name>baseResourcePath</param-name><param-value>@baseResourcePath.init.param@</param-value></init-param>
+    <init-param><param-name>baseUrl</param-name><param-value>@baseUrl.init.param@</param-value></init-param>
+    <init-param><param-name>cacheDir</param-name><param-value>@cacheDir.init.param@</param-value></init-param>
+    <init-param><param-name>cacheSize</param-name><param-value>@cacheSize.init.param@</param-value></init-param>
+    <init-param><param-name>cullDelay</param-name><param-value>@cullDelay.init.param@</param-value></init-param>
+    <init-param><param-name>maxWidth</param-name><param-value>@maxWidth.init.param@</param-value></init-param>
+    <init-param><param-name>maxHeight</param-name><param-value>@maxHeight.init.param@</param-value></init-param>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.jpg</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.JPG</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.jpeg</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.JPEG</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.gif</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.GIF</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.png</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageScaleServlet</servlet-name>
+    <url-pattern>*.PNG</url-pattern>
+  </servlet-mapping>
+  
+</web-app>
+

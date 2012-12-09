@@ -1,0 +1,442 @@
+<html>
+  <head>
+    <title>Server-Side Image Manager - Documentation</title>
+    <style type="text/css">
+      body {
+         font-family: optima, helvetica, arial, sans-serif;
+      }
+      dl.url_examples {
+         padding: 0em 3em 0em 3em;
+      }
+      dl.url_examples dt {
+         padding-top: 0.5em;
+         font-family: monospace;
+	 color: red;
+      }
+      dl.params {
+         padding: 0em 3em 0em 3em;
+      }
+      dl.params dt {
+         padding-top: 0.5em;
+         font-family: monospace;
+	 color: red;
+      }
+      div.example_xml {
+         white-space: pre;
+         font-family: monospace;
+	 font-size: smaller;
+	 background-color: #CCCCFF;
+         margin: 3em 3em 3em 3em;
+         padding: 1em 0em 1em 0em;
+         border-top: 2 solid black;
+         border-bottom: 2 solid black;
+      }
+      div.example_properties {
+         white-space: pre;
+         font-family: monospace;
+	 font-size: smaller;
+	 background-color: #CCCCFF;
+         margin: 3em 3em 3em 3em;
+         padding: 1em 0em 1em 0em;
+         border-top: 2 solid black;
+         border-bottom: 2 solid black;
+      }
+      div.example_properties strong {
+         font-weight: bold;
+	 color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Server-Side Image Manager</h1>
+    <p>by Steve Waldman &lt;<a href="mailto:swaldman@mchange.com">swaldman@mchange.com</a>&gt;</p>
+    <p>&copy; 2003 Machinery For Change, Inc.</p>
+    <p><i>
+      This software is made available for use, modification, and redistribution,
+      under the terms of the GNU Public License (GPL).
+    </i></p>
+    <hr/>
+    <h2><a name="contents">Contents</a></h2>
+    <ol>
+      <li><a href="#contents">Contents</a></li>
+      <li><a href="#basics">Basics</a></li>
+      <li><a href="#prerequisites">Prerequisites</a></li>
+      <li><a href="#ssim_as_servlet">Using SSIM as a Servlet in a Java Web Application</a></li>
+      <li><a href="#ssim_non-Java_website">Using SSIM to manage images for a non-Java website</a></li>
+      <li><a href="#ssim_as_a_service">SSIM as a Stand-Alone Service</a></li>
+      <li><a href="#ssim_as_a_hybrid">Using SSIM to manage both web-app images and certain external images</a></li>
+      <li><a href="#appendix_a_initialization_parameters">Appendix A: Initialization Parameters</a></li>
+      <li><a href="#appendix_b_request_parameters">Appendix B: Request Parameters</a></li>
+      <li><a href="appendix_c_sample_web_xml">Appendix C: Sample web.xml</a></li>
+    </ol>
+    <hr/>
+    <h2><a name="basics">Basics</a></h2>
+    <p>
+      Server-Side Image Manager is a library designed to simplify the management of images
+      on websites. In particular, webites often require that the same basic image be made
+      available in multiple sizes. Common examples include icons or logos, which may be 
+      dispersed throught a website in many sizes, or photographs which are presented in
+      thumbnail form, and then are made available at multiple resolutions.
+    </p>
+    <p>
+      There are many approaches to dealing with the problem of multiple scaled images,
+      but none of them are optimal. Lazy webmasters just supply a large image 
+      and use HTML width and height attributes to force clients to scale the images, 
+      but this is a very inefficient solution: to display even an icon or thumbnail, 
+      the client has to download the oversized image and rescale it, wasting bandwith 
+      and client CPU. More diligent webmasters prescale the image by hand to each desired 
+      size. But, this approach is a pain in the ass, a maintenance problem -- every time 
+      an image changes, or a new size is desired, the webmaster must remember to reproduce 
+      all required scaled instances.
+    </p>
+    <p>
+      Server-Side Image Manager allows webmasters to get the performance and efficiency
+      advantages of prescaling without the maintenance problems. SSIM transforms images
+      into dynamic rather than static resources. For example, an HTML page might
+      reference an image tags that look like any of the following:
+      <dl class="url_examples">
+	  <dt>&lt;img src="cool_pic.jpg?width=50"&gt;</dt>
+	  <dd>
+	    <i>
+	      references cool_pic.jpg, scaled to a width of 50 pixes and its natural, 
+	      aspect-ratio-preserving height.
+	    </i>
+	  </dd>
+	  <dt>&lt;img src="cool_pic.jpg?height=50"&gt;</dt>
+	  <dd>
+	    <i>
+	      references cool_pic.jpg, scaled to a height of 50 pixes and its natural, 
+	      aspect-ratio-preserving width.
+	    </i>
+	  </dd>
+	  <dt>&lt;img src="cool_pic.jpg?width=200&height=300"&gt;</dt>
+	  <dd>
+	    <i>
+	      references cool_pic.jpg, scaled to a width of 200 pixels and a height of 
+	      300 pixels, even if this results in the image being distorted.
+	    </i>
+	  </dd>
+	  <dt>&lt;img src="cool_pic.jpg?width=200&height=300&preserveAspectRatio=true"&gt;</dt>
+	  <dd>
+	    <i>
+	      references cool_pic.jpg, scaled to the maximum size possible that
+	      will fit within a bounding box of width 200 and height 300, but 
+	      that preserves the image's natural aspect ratio.
+	    </i>
+	  </dd>
+	  <dt>&lt;img src="imageservlet?imageUrl=http://foo.booboo.com/faraway_pic.jpg?width=200"&gt;</dt>
+	  <dd>
+	    <i>
+	      references faraway_pic.jpg on some other server, scaled to a width of 200 pixels
+	    </i>
+	  </dd>
+      </dl>
+    </p>
+    <p>
+      Server-side Image Manager caches the images it generates and serves, so, after
+      the first request for a scaled version, users see performance similar to static
+      images. Great care has been taken in the development of the library to ensure
+      maximum concurrent access to images, while making sure that clients never see
+      incomplete or broken images while images are being scaled and cached.
+    </p>
+    <p>
+      Server-side Image Manage can be used as a Servlet in java-based web applications, 
+      or, in combination with a standalone servlet environment, as a service that non-Java
+      based websites can use to manage their images.
+    </p>
+    <h2><a name="prerequisites">Prerequisites</a></h2>
+    <p>
+      SSIM requires a that a Java Virtual Machine, version 1.4 or higher, and 
+      a Java Servlet environment, version 2.3 or higher, be the server that will
+      manage your images. Users who wish to run SSIM in combination with a non-Java 
+      webserver can do so by setting up the free Tomcat server as a standalone service.
+      If you wish to use SSIM as a service for an external, non-Java web-application,
+      it will be helpful to install Apache Ant, which will "automagically" do the Java-specific 
+      stuff required to use SSIM.
+    </p>
+    <h2><a name="ssim_as_servlet">Using SSIM as a Servlet in a Java Web Application</a></h2>
+    <p>
+      If you plan to use Server-Side Image Manager as a servlet, you should already be
+      familiar with the how to deploy Java Servlets and web applications. Nothing
+      more will be required of you than adding SSIM's jar file to your web-application,
+      and configuring the servlet in your <tt>web.xml</tt> file. See the 
+      <a href="#appendix_c_sample_web_xml">sample <tt>web.xml</tt> in Appendix C</a> below.
+    </p>
+    <p>
+      The classname of the SSIM's servlet is <tt>com.mchange.v2.ssim.SsimServlet</tt>.
+      You'll need to be sure that all requests to images that should be handled by
+      the servlet get mapped to the servlet, usually by providing suffix url-mappings
+      such as *.gif, *.jpg, etc. See the <a href="#appendix_c_sample_web_xml">sample</a>.
+    </p>
+    <p>
+      The servlet accepts a bunch of initialization parameters, which are described
+      in detail in <a href="#appendix_a_initialization_parameters">Appendix A</a>. While
+      all initialization parameters are optional, you'll probably want to set at least
+      <a href="#init_param_cacheDir">cacheDir</a>, since it defaults to using the web applications
+      temporary directory, which may not be preserved between web application restarts.
+    </p>
+    <h2><a name="ssim_non-Java_website">Using SSIM to manage images for a non-Java website</a></h2>
+    <p>
+      You can plug SSIM into apache or other webservers and let it manage your images for you. You'll have to
+      figure out how to run Java servlets and web applications in combination with your webserver. One common 
+      configuration is to use the <a href="http://httpd.apache.org/">Apache webserver</a>, 
+      <a href="http://jakarta.apache.org/tomcat/">Apache Jakarta Tomcat</a>, 
+      and <a href="http://apache.130th.net/jakarta/tomcat-connectors/">mod_jk or mod_jk2</a>. You'll also
+      need to install Apache Ant.
+    </p>
+    <p>
+      The SSIM distribution contains a directory called <tt>build-service</tt>. Enter this
+      directory, edit the file <tt>build.properties</tt> to set up your 
+      <a href="#appendix_a_initialization_parameters">initialization parameters</a>, and then type <tt>ant</tt>.
+      This will build your service web application, which you will find as a war file (ending in <tt>.war</tt>)
+      underneath the directory called <tt>dist</tt> that will appear after you've run <tt>ant</tt>. Configure
+      your webserver to deploy this Java web application, and that's it! (All of this will be easy if you're used
+      to deploying Java web-apps in your environment. It might be a pain and a lot of configuring if you're not...)
+    </p>
+    <p>
+      The crucial thing is to get the initialization parameters right in <tt>build.properties</tt>. Let's say you
+      have an existing website, whose document root is <tt>/usr/local/web</tt>, and you want to make its images
+      scalable. You'd edit <tt>build.properties</tt> to look something like this:
+      <div class="example_properties">
+
+	#
+	# The name of the war file that should be generated
+	# WITHOUT THE .war SUFFIX (e.g. use "images" to generate
+	# "images.war")
+	#
+	# REQUIRED
+	#
+	web.app.name=scaledimages
+	
+	#
+	# Servlet Initialization Parameters
+	# all are optional, but cacheDir and cacheSize are strongly recommended
+	# (Please see Server-Side Image Manager documentation!)
+	#
+	# Uncomment and supply the ones you want
+	#
+	
+	<strong>baseUrl.init.param=file:///usr/local/web/</strong>
+	cacheDir.init.param=/var/tmp
+	#cacheSize.init.param=
+	#cullDelay.init.param=
+	#maxWidth.init.param=
+	#maxHeight.init.param=
+	#allowDomains.init.param=
+      </div>
+      You'd run <tt>ant</tt>, then deploy the <tt>images.war</tt> file you'd find under <tt>build-service/dist</tt>,
+      under the alias (or in Java-speak <tt>contextPath</tt>) <tt>/scaledimages</tt>. You'd go through your web application
+      and for any images you'd like scaled, change the image tags like 
+      <strong><tt>&lt;img src="/icons/logo.gif" width="200"&gt;</tt></strong> to 
+      <strong><tt>&lt;img src="/scaledimages/icons/logo.gif?width=200"&gt;</tt></strong>.(You'd need to be careful of image source urls
+      specified relative to the HTML page, and change them to absolute URLs based on the webserver's document root (URLs
+      beginning with "/") if you want SSIM to scale these images.
+    </p>
+    <h2><a name="ssim_as_a_service">SSIM as a Stand-Alone Service</a></h2>
+    <p>
+      You can use SSIM as a "standalone" image server, put your images in its care,
+      and let your non-Java website refer to the images via absolute URLs. Just download
+      Jakarta Tomcat, configure a web-application as described above, add the war file
+      to Tomcat's web-app directory and Voila! you have a dedicated, scaling HTTP server
+      for your images.
+    </p>
+    <h2><a name="ssim_as_a_hybrid">Using SSIM to manage both web-app images and certain external images</a></h2>
+    <p>
+      <b>[Advanced]</b> It is frequently useful to have images both internal to a Java web application and 
+      external to the application's war file be managed by SSIM. For example, if you want
+      to write a photoalbum application, you might wish to let the images be stored in
+      some easily modifiable external directory, but also have images internal to the
+      web-application itself. You can do this by defining a web-application-scoped variable
+      (i.e. a ServletContext attribute) under the name <tt>com_mchange_v2_ssim_SsimServlet__patternReplacementMap</tt>,
+      which must be of type <tt>com.mchange.v2.util.PatternReplacementMap</tt> (see 
+      <a href="api/com/mchange/v2/util/PatternReplacementMap.html">javadocs</a>). If you
+      do this, SsimServlet will check each requests path (URI) against a list of regular expression. If
+      the path matches, SSIM substitute the replacement path you specify for the original. The replacement
+      paths may depend upon the originally requested path, by virtue of the common regular expression
+      convention that allows regexes to contain parenthesized subgroupings, and regex replacement expressions to refer
+      to those groupings as $1 for the first subgrouping, $2 for the second, and $0 for the whole matching
+      expression. The replacements should be absolute URLs. They may be <tt>file:</tt> URLs.
+    </p>
+    <p>
+      Any path that resolves to a URL via the PatternReplacementMap will be retrieved from this URL. These
+      paths are considered trusted -- no further security checks will be performed -- and they take 
+      precedence over any <tt>baseResourcePath</tt> or <tt>baseUrl</tt> you may have set.
+    </p>
+    <h2><a name="appendix_a_initialization_parameters">Appendix A: Initialization Parameters</a></h2>
+    <dl class="params">
+      <dt><a name="init_param_allowDomains">allowDomains</a></dt>
+      <dd>
+	A comma separated list of domains from which SSIM should be willing
+	to fetch, scale, and reserve images, when requests contain an explicit
+	imageUrl parameter. If not specified, only imageUrls from the same subdomain
+	as the request, or to localhost if you are running locally, will
+	be allowed. If set to the special value <tt>all</tt>, the Servlet will be
+	allowed to retrieve and scale images from any URL. If set to the special
+	value <tt>none</tt> specifying <tt>imageUrl</tt> as a request parameter
+	is forbidden will result in an error.
+      </dd>
+      <dt><a name="init_param_baseResourcePath">baseResourcePath</a></dt>
+      <dd>
+	A path, relative to the root of the web-application in which an SSIMServlet is
+	running, that should be prepended to <tt>pathInfo</tt> in finding source
+	images (when no explicit <tt>imageUrl</tt> is specified). Effectively defaults
+	to <tt>/</tt> when not specified. <strong>Only one of <tt>baseResourcePath</tt>
+	and <tt>baseUrl</tt> can be explicitly specified.</strong>
+      </dd>
+      <dt><a name="init_param_baseUrl">baseUrl</a></dt>
+      <dd>
+	A url that should be prepended to <tt>pathInfo</tt> in finding source
+	images (when no explicit <tt>imageUrl</tt> is specified). This URL can be a 
+	<tt>file:</tt> URL, allowing you to keep your source images separate from
+	your web application. Effectively defaults
+	to the return value of <tt>request.getResource("/")</tt> when not specified. 
+	<strong>Only one of <tt>baseResourcePath</tt>
+	and <tt>baseUrl</tt> can be explicitly specified.</strong>
+      </dd>
+      <dt><a name="init_param_cacheDir">cacheDir</a></dt>
+      <dd>
+	The absolute path to a directory where SSIM can put its image cache. It is 
+	strongly recommended that you supply this parameter, as it defaults to the
+	web application's temporary directory, which may not be retained between 
+	web-app restarts.
+      </dd>
+      <dt><a name="init_param_cacheSize">cacheSize</a></dt>
+      <dd>
+	The maximum size (in megabytes) that SSIM should permit for its scaled
+	image cache. SSIM will cull least-recently-used images when the
+	cache size exceeds this value. Defaults to 50.
+	If less than or equal to 0, the cache will never be culled cache size will 
+	unlimited.
+      </dd>
+      <dt><a name="init_param_cullDelay">cullDelay</a></dt>
+      <dd>
+	The number of seconds SSIM should wait between checks to see if the cache has
+	exceeded the cache size and must be culled. Defaults to 300 (five minutes).
+	If less than or equal to 0, the cache will never be culled cache size will 
+	unlimited.
+      </dd>
+      <dt><a name="init_param_maxConcurrency">maxConcurrency</a></dt>
+      <dd>
+	The maximum number of images SSIM will simultaneously attempt to scale. Defaults
+	to 3. If this value is too high, SSIM may simultaneously attempt to scale many 
+	large images, and provoke <tt>OutOfMemoryErrors</tt>.
+      </dd>
+      <dt><a name="init_param_maxWidth">maxWidth</a></dt>
+      <dd>
+	The maximum width (in pixels) that clients can request images scale to. Defaults to 2000.
+	If less than or equal to zero, SSIM will scale images to unlimited widths.
+      </dd>
+      <dt><a name="init_param_maxHeight">maxHeight</a></dt>
+      <dd>
+	The maximum height (in pixels) that clients can request images scale to. Defaults to 2000.
+	If less than or equal to zero, SSIM will scale images to unlimited heights.
+      </dd>
+    </dl>
+    <h2><a name="appendix_b_request_parameters">Appendix B: Request Parameters</a></h2>
+    <dl class="params">
+      <dt><a name="req_param_width">width</a></dt>
+      <dd>
+	The width to which an image should be scaled. If supplied without <tt>height</tt>
+	the image will scale to this width and while maintaining its natural aspect ratio. If <tt>height</tt> 
+	is supplied as well, the image may be distorted, unless <tt>preserveAspectRatio</tt>
+	is also supplied, in which case the image will scale as large as possible up to a <i>maximum</i> of this width,
+	but no wider than the natural aspect ratio would permit given an accompanying height constraint.
+      </dd>
+      <dt><a name="req_param_height">height</a></dt>
+      <dd>
+	The height to which an image should be scaled. If supplied without <tt>width</tt>
+	the image will scale to this height and while maintaining its natural aspect ratio. If <tt>width</tt> 
+	is supplied as well, the image may be distorted, unless <tt>preserveAspectRatio</tt>
+	is also supplied as true, in which case the image will scale as large as possible up to a <i>maximum</i> of this height,
+	but no wider than the natural aspect ratio would permit given an accompanying width constraint.
+      </dd>
+      <dt><a name="req_param_imageUrl">imageUrl</a></dt>
+      <dd>
+	The full URL (often URL encoded) of the original image to be scaled.
+	Rather than finding the image to scale based on the <tt>pathInfo</tt> of the request,
+	SSIM can accept an explicit image URL, which needn't be on the same server as the
+	SSIMServlet. The <a href="#init_param_allowDomains">allowDomains</a> initialization parameters
+	determines whether or not SSIM will be permitted to scale and serve a foreign image.
+      </dd>
+      <dt><a name="req_param_mimeType">mimeType</a></dt>
+      <dd>
+	<strong>[Experimental]</strong> SSIM can not only scale images, but can also interconvert
+	between image types. For example, if you have an image in PNG format, but you wish to make
+	it available to old or crippled browsers that don't support this format, you might use
+	a url like <tt>myImage.png?mimeType=image/jpeg</tt> (or in URL-encoded form <tt>myImage.png?mimeType=image%2fjpeg</tt>)
+	which would cause the image to be converted on the fly to JPEG format, and for the converted image
+	to be cached for future use. Mime-type interconversions and scaling can be combined freely.
+      </dd>
+      <dt><a name="req_param_preserveAspectRatio">preserveAspectRatio</a></dt>
+      <dd>
+	If this parameter set to true, than any <tt>width</tt> and <tt>height</tt>
+	request parameters are treated as defining a bounding-box, within which the image will be scaled to the
+	maximum possible size that retains the natural aspect ratio of the image.
+      </dd>
+    </dl>
+    <h2><a name="appendix_c_sample_web_xml">Appendix C: Sample web.xml</a></h2>
+    <div class="example_xml">
+      &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+
+      &lt;!DOCTYPE web-app
+		PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+		"http://java.sun.com/dtd/web-app_2_3.dtd"&gt;
+
+      &lt;web-app&gt;
+	&lt;display-name&gt;ssim-example&lt;/display-name&gt;
+
+	&lt;servlet&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;servlet-class&gt;com.mchange.v2.ssim.SsimServlet&lt;/servlet-class&gt;
+	  &lt;init-param&gt;
+            &lt;param-name&gt;cacheDir&lt;/param-name&gt;
+            &lt;param-value&gt;/web/tmp/photo.mchange.com&lt;/param-value&gt;
+	  &lt;/init-param&gt;
+	&lt;/servlet&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.jpg&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.JPG&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.jpeg&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.JPEG&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.gif&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.GIF&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.png&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+	
+	&lt;servlet-mapping&gt;
+	  &lt;servlet-name&gt;imageScaleServlet&lt;/servlet-name&gt;
+	  &lt;url-pattern&gt;*.PNG&lt;/url-pattern&gt;
+	&lt;/servlet-mapping&gt;
+
+      &lt;/web-app&gt;
+    </div>
+    <hr/>
+    <a href="#contents">Back to Contents</a>
+  </body>
+</html>

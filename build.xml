@@ -1,0 +1,127 @@
+<project name="ssim" default="dist">
+
+   <!-- ignore the CLASSPATH environment variable. force builds to specify classpaths -->
+   <property name="build.sysclasspath" value="ignore" />
+
+   <property file="build.properties" />
+   <property file="version.properties" />
+
+   <property name="ssim.name" value="ssim-${ssim.version}" />
+   <property name="src.dir" value="src" />
+   <property name="java.src.dir" value="${src.dir}/classes" />
+   <property name="build.dir" value="build" />
+   <property name="build.classes.dir" value="${build.dir}/classes" />
+   <property name="build.apidocs.dir" value="${build.dir}/apidocs" />
+   <property name="dist.dir" value="dist" />
+   <property name="lib.jar.file" value="build/${ssim.name}.jar" />
+   <property name="open.dist.dir" value="${dist.dir}/${ssim.name}" />
+   <property name="open.dist.lib.dir" value="${open.dist.dir}/lib" />
+   <property name="open.dist.docs.dir" value="${open.dist.dir}/docs" />
+   <property name="open.dist.apidocs.dir" value="${open.dist.docs.dir}/api" />
+   <property name="bindist.name" value="${ssim.name}-bin" />
+   <property name="srcdist.name" value="${ssim.name}-src" />
+
+   <property name="j2ee.home" value="/usr/local/pkg/j2sdkee" />
+
+   <path id="build-class-path">
+       <pathelement location="${j2ee.home}/lib/j2ee.jar" />
+   </path>
+
+   <target name="init">
+      <mkdir dir="${build.dir}" />
+      <mkdir dir="${dist.dir}" />
+   </target>
+
+   <target name="clean">
+      <delete dir="${build.dir}" />
+      <delete dir="${dist.dir}" />
+   </target>
+
+   <target name="compile" depends="init">
+      <mkdir dir="${build.classes.dir}" />
+      <javac srcdir="${java.src.dir}" 
+             destdir="${build.classes.dir}" 
+             classpathref="build-class-path" 
+             debug="on" />
+   </target>
+
+   <target name="lib-jar" depends="compile">
+      <jar destfile="${lib.jar.file}">
+          <fileset dir="${build.classes.dir}">
+             <exclude name="**/photoalbum/**" />
+          </fileset>
+      </jar>
+   </target>
+
+   <target name="javadocs" depends="init">
+     <mkdir dir="${build.apidocs.dir}" />
+     <javadoc packagenames="com.mchange.v2.ssim,com.mchange.v2.util"
+	      sourcepath="${java.src.dir}"
+	      destdir="${build.apidocs.dir}" 
+	      classpathref="build-class-path" 
+	      windowtitle="${ssim.name} API Documentation"
+	      />
+   </target>
+
+   <target name="open-dist" depends="lib-jar,javadocs">
+     <copy toDir="${open.dist.dir}">
+       <fileset dir="${src.dir}/dist-static" />
+     </copy>
+     <mkdir dir="${open.dist.apidocs.dir}" />
+     <copy toDir="${open.dist.apidocs.dir}">
+       <fileset dir="${build.apidocs.dir}" />
+     </copy>
+     <mkdir dir="${open.dist.lib.dir}" />
+     <copy toDir="${open.dist.lib.dir}">
+       <fileset dir="${build.dir}">
+	 <include name="*.jar" />
+       </fileset>
+     </copy>
+   </target>
+
+   <target name="zip-dist" depends="open-dist">
+      <zip destfile="${dist.dir}/${bindist.name}.zip">
+        <zipfileset dir="${open.dist.dir}" prefix="${ssim.name}"/>
+      </zip>
+   </target>
+
+   <target name="tar-dist" depends="open-dist">
+      <tar destfile="${dist.dir}/${bindist.name}.tar">
+        <tarfileset dir="${open.dist.dir}" prefix="${ssim.name}"/>
+      </tar>
+   </target>
+
+   <target name="tgz-dist" depends="tar-dist">
+      <gzip zipfile="${dist.dir}/${bindist.name}.tgz" src="${dist.dir}/${bindist.name}.tar" />
+   </target>
+
+   <target name="bindist" depends="tgz-dist, zip-dist" />
+
+   <target name="dist" depends="bindist" />
+
+   <target name="srcdist">
+      <zip destfile="${dist.dir}/${srcdist.name}.zip">
+        <zipfileset dir="." prefix="${srcdist.name}">
+           <exclude name="${build.dir}/**"/>
+           <exclude name="${dist.dir}/**"/>
+           <exclude name="**/*.class"/>
+           <exclude name="**/old/**"/>
+           <exclude name="**/bad/**"/>
+        </zipfileset>
+      </zip>
+      <tar destfile="${dist.dir}/${srcdist.name}.tar">
+        <tarfileset dir="." prefix="${srcdist.name}">
+           <exclude name="${build.dir}/**"/>
+           <exclude name="${dist.dir}/**"/>
+           <exclude name="**/*.class"/>
+           <exclude name="**/old/**"/>
+           <exclude name="**/bad/**"/>
+        </tarfileset>
+      </tar>
+      <gzip zipfile="${dist.dir}/${srcdist.name}.tgz" src="${dist.dir}/${srcdist.name}.tar" />
+   </target>
+
+   <target name="all" depends="dist,srcdist" />
+
+</project>
+
