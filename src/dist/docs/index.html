@@ -298,7 +298,8 @@
 	The absolute path to a directory where SSIM can put its image cache. It is 
 	strongly recommended that you supply this parameter, as it defaults to the
 	web application's temporary directory, which may not be retained between 
-	web-app restarts.
+	web-app restarts. <b><i>Note that this directory must exist and be writable
+	by the Java servlet container (e.g. tomcat).    
       </dd>
       <dt><a name="init_param_cacheSize">cacheSize</a></dt>
       <dd>

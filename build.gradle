@@ -17,8 +17,6 @@ ext {
     mvnExtrasDir     = "$rootDir/$mvnExtrasDirName"
     openDistDirName  = "$buildDirName/$distsDirName/$archivesBaseName-$version"
     openDistDir      = "$rootDir/$openDistDirName"
-    zipDistDirName   = "${openDistDirName}.zip"
-    zipDistDir       = "$rootDir/$zipDistDirName"
 }
 
 
@@ -74,6 +72,11 @@ task openDistMainLib( type: Copy, dependsOn: assemble ) {
 }
 
 task openDist( dependsOn: ["assemble", "sourcesJar", "javadocJar", "openDistTopLevel", "openDistDependencyLibs", "openDistApiDocDir", "openDistMainLib"] );
+
+task zipDist ( type: Zip, dependsOn: openDist ) {
+   destinationDir = distsDir
+   from openDistDir
+}
 
 
 /* -- old stuff, removed -- */
