@@ -1,0 +1,101 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group            = 'com.mchange' 
+archivesBaseName = 'ssim'
+version          = '0.6.1'
+
+libsDirName = 'lib' //why is the plural "libs" the default? talk about a bad redefinition of a convention
+
+ext {
+    srcDirName       = 'src'
+    srcDir           = "$rootDir/$srcDirName"
+    srcDistDirName   = "$srcDirName/dist"
+    srcDistDir       = "$rootDir/$srcDistDirName"
+    buildDirName     = 'build' //odd this isn't a preset
+    mvnExtrasDirName = "$buildDirName/mvn-extras"
+    mvnExtrasDir     = "$rootDir/$mvnExtrasDirName"
+    openDistDirName  = "$buildDirName/$distsDirName/$archivesBaseName-$version"
+    openDistDir      = "$rootDir/$openDistDirName"
+    zipDistDirName   = "${openDistDirName}.zip"
+    zipDistDir       = "$rootDir/$zipDistDirName"
+}
+
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    // Snapshots URL
+    maven {
+        url "https://oss.sonatype.org/content/groups/public/"
+    }
+}
+
+
+dependencies {
+    compile group: 'javax.servlet',     name: 'servlet-api',           version: '2.5'
+    compile group: 'com.mchange',       name: 'mchange-commons-java',  version: '0.2.3.2-SNAPSHOT'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    destinationDir = new File( mvnExtrasDir )
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+ 
+task sourcesJar(type: Jar) {
+    destinationDir = new File( mvnExtrasDir )
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task openDistTopLevel( type: Copy ) {
+    from "$srcDistDir"
+    into "$openDistDir"
+ }
+
+task openDistDependencyLibs( type: Copy ) {
+    from configurations.runtime {
+       exclude "servlet*.jar"
+    }
+    into "$openDistDir/lib"
+}
+
+task openDistApiDocDir( type: Copy, dependsOn: javadoc ) {
+    from  javadoc.destinationDir  
+    into "$openDistDir/docs/api"
+}
+
+task openDistMainLib( type: Copy, dependsOn: assemble ) {
+    from  libsDir
+    into "$openDistDir/lib"
+
+}
+
+task openDist( dependsOn: ["assemble", "sourcesJar", "javadocJar", "openDistTopLevel", "openDistDependencyLibs", "openDistApiDocDir", "openDistMainLib"] );
+
+
+/* -- old stuff, removed -- */
+
+/*
+ *   // unnecessary -- use gradle install / mavenLocal() [the repository under ~/.m2]
+ *   // originally from repositories section/closure(?)
+ *
+ *   // Local URL
+ *   maven {
+ *	url "file:${interprojectMavenRepo}"
+ *   }
+ */
+
+/*
+ * // unnecessary -- use gradle install / mavenLocal() [the repository under ~/.m2]
+ *
+ * uploadArchives {
+ *    repositories {
+ *	mavenDeployer {
+ *	    repository(url: "file:${interprojectMavenRepo}")
+ *	}
+ *   } 
+ * }
+ */
