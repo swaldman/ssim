@@ -1,9 +1,18 @@
+// TODO: the servlet-api should be published in the pom/maven-repo under scope "provided",
+//       so that tools don't try to download the servlet api at runtime, but use the libs
+//       provided by their container.
+//
+//       See: http://issues.gradle.org/browse/GRADLE-784
+//            https://github.com/gradle/gradle/pull/109/files
+//
+
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'signing'
 
 group            = 'com.mchange' 
 archivesBaseName = 'ssim'
-version          = '0.6.1'
+version          = '0.6.2-SNAPSHOT'
 
 libsDirName = 'lib' //why is the plural "libs" the default? talk about a bad redefinition of a convention
 
@@ -17,11 +26,12 @@ ext {
     mvnExtrasDir     = "$rootDir/$mvnExtrasDirName"
     openDistDirName  = "$buildDirName/$distsDirName/$archivesBaseName-$version"
     openDistDir      = "$rootDir/$openDistDirName"
+
+    deploymentType   =  ( version.endsWith("SNAPSHOT") ? "mavenSnapshot" : "mavenRelease" );
 }
 
 
 repositories {
-    mavenLocal()
     mavenCentral()
 
     // Snapshots URL
@@ -38,15 +48,21 @@ dependencies {
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     destinationDir = new File( mvnExtrasDir )
+
     classifier = 'javadoc'
+
     from javadoc.destinationDir
 }
  
 task sourcesJar(type: Jar) {
     destinationDir = new File( mvnExtrasDir )
+
     classifier = 'sources'
+
     from sourceSets.main.allSource
 }
+
+task mavenExtras( dependsOn: ["javadocJar", "sourcesJar"] );
 
 task openDistTopLevel( type: Copy ) {
     from "$srcDistDir"
@@ -68,37 +84,101 @@ task openDistApiDocDir( type: Copy, dependsOn: javadoc ) {
 task openDistMainLib( type: Copy, dependsOn: assemble ) {
     from  libsDir
     into "$openDistDir/lib"
-
 }
 
-task openDist( dependsOn: ["assemble", "sourcesJar", "javadocJar", "openDistTopLevel", "openDistDependencyLibs", "openDistApiDocDir", "openDistMainLib"] );
+task openDist( dependsOn: ["assemble", "openDistTopLevel", "openDistDependencyLibs", "openDistApiDocDir", "openDistMainLib"] );
 
 task zipDist ( type: Zip, dependsOn: openDist ) {
    destinationDir = distsDir
    from openDistDir
 }
 
+/*
+task deployMavenSnapshot {
+    project.ext.deploymentType = "mavenSnapshot"
 
-/* -- old stuff, removed -- */
+    doLast {
+	tasks.uploadArchives.execute()
+    }
+}
+*/
+
+
+artifacts {
+    archives jar
+
+    if ( project.ext.deploymentType.equals( "mavenRelease" ) ) {	
+       archives sourcesJar
+       archives javadocJar
+    } 
+}
+
+signing {
+   sign configurations.archives
+}
 
 /*
- *   // unnecessary -- use gradle install / mavenLocal() [the repository under ~/.m2]
- *   // originally from repositories section/closure(?)
+ * Many thanks to Yennick Trevels and the GradleFX build fine, 
+ * on which the following is modeled
  *
- *   // Local URL
- *   maven {
- *	url "file:${interprojectMavenRepo}"
- *   }
+ * see http://jedicoder.blogspot.com/2011/11/automated-gradle-project-deployment-to.html
  */
 
-/*
- * // unnecessary -- use gradle install / mavenLocal() [the repository under ~/.m2]
- *
- * uploadArchives {
- *    repositories {
- *	mavenDeployer {
- *	    repository(url: "file:${interprojectMavenRepo}")
- *	}
- *   } 
- * }
- */
+uploadArchives {
+   dependsOn "jar" 
+   dependsOn "mavenExtras" 
+
+   String deploymentUrl;
+   boolean mustSign;
+
+   if ( project.ext.deploymentType.equals( "mavenSnapshot" ) ) {
+     deploymentUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+     mustSign = false;
+   } else if ( project.ext.deploymentType.equals( "mavenRelease" ) ) {
+     deploymentUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+     mustSign = true;
+   } else {
+     throw new Exception("Cannot upload -- deploymentType not configured.")
+   }
+
+   repositories {
+       mavenDeployer {
+	   if (mustSign) {
+	       beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+	   }
+      
+	   repository(url: deploymentUrl) {
+	       authentication(userName: sonatypeUsername, password: sonatypePassword)
+	   }
+    
+	   pom.project {
+	       name 'SSIM'
+	       packaging 'jar'
+	       description 'a library for on-the-fly rescaling & caching of images on a web server'
+	       url 'http://www.mchange.com/projects/ssim'
+    
+	       scm {
+		   url 'scm:git@github.com:swaldman/ssim.git'
+		   connection 'scm:git@github.com:swaldman/ssim.git'
+		   developerConnection 'scm:git@github.com:swaldman/ssim.git'
+	       }
+    
+	       licenses {
+		   license {
+		       name 'GNU General Public License, Version 2'
+		       url 'http://www.gnu.org/licenses/gpl-2.0.html'
+		       distribution 'repo'
+		   }
+	       }
+    
+	       developers {
+		   developer {
+		       id 'swaldman'
+		       name 'Steve Waldman'
+		   }
+	       }
+	  }
+      }
+   }
+}
+
