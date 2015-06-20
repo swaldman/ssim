@@ -13,7 +13,7 @@ apply plugin: 'signing'
 
 group            = 'com.mchange' 
 archivesBaseName = 'ssim'
-version          = '0.6.2-SNAPSHOT'
+version          = '0.6.2'
 
 libsDirName = 'lib' //why is the plural "libs" the default? talk about a bad redefinition of a convention
 
