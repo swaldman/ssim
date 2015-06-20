@@ -44,7 +44,7 @@ repositories {
 
 dependencies {
     compile group: 'javax.servlet',     name: 'servlet-api',           version: '2.5'
-    compile group: 'com.mchange',       name: 'mchange-commons-java',  version: '0.2.3.2-SNAPSHOT'
+    compile group: 'com.mchange',       name: 'mchange-commons-java',  version: '0.2.10'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
@@ -115,7 +115,9 @@ artifacts {
 }
 
 signing {
-   sign configurations.archives
+   if ( !suppressSigning ) {
+     sign configurations.archives
+   }
 }
 
 /*
