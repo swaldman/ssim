@@ -13,7 +13,7 @@ apply plugin: 'signing'
 
 group            = 'com.mchange' 
 archivesBaseName = 'ssim'
-version          = '0.6.2'
+version          = '0.6.3'
 
 libsDirName = 'lib' //why is the plural "libs" the default? talk about a bad redefinition of a convention
 
@@ -45,6 +45,11 @@ repositories {
 dependencies {
     compile group: 'javax.servlet',     name: 'servlet-api',           version: '2.5'
     compile group: 'com.mchange',       name: 'mchange-commons-java',  version: '0.2.10'
+}
+
+compileJava {
+  sourceCompatibility = 1.6
+  targetCompatibility = 1.6
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

@@ -36,10 +36,11 @@ public class SsimServlet extends HttpServlet
 {
     public final static String PATTERN_REPLACEMENT_MAP_APPKEY = "com_mchange_v2_ssim_SsimServlet__patternReplacementMap";
 
-    final static int DFLT_MAX_WIDTH  = 2000;
-    final static int DFLT_MAX_HEIGHT = 2000;
-    final static int DFLT_CACHE_SIZE = 50;  //50MB
-    final static int DFLT_CULL_DELAY = 300; //try to cull every five minutes
+    final static int DFLT_BROWSER_MAX_AGE = 3600; // seconds, neg means no-cache
+    final static int DFLT_MAX_WIDTH       = 2000;
+    final static int DFLT_MAX_HEIGHT      = 2000;
+    final static int DFLT_CACHE_SIZE      = 50;  //50MB
+    final static int DFLT_CULL_DELAY      = 300; //try to cull every five minutes
 
     final static int DFLT_MAX_SIMULTANEOUS_SCALES = 3;
 
@@ -54,6 +55,7 @@ public class SsimServlet extends HttpServlet
     PatternReplacementMap patternReplacementMap = null;
 
     // MT: unchanging after init()
+    int        browser_max_age         = DFLT_BROWSER_MAX_AGE; // seconds, neg means no-cache
     int        max_width               = DFLT_MAX_WIDTH;
     int        max_height              = DFLT_MAX_HEIGHT;
     int        max_simultaneous_scales = DFLT_MAX_SIMULTANEOUS_SCALES;
@@ -63,6 +65,7 @@ public class SsimServlet extends HttpServlet
     String[]   allowDomains            = null; //all lower case
     String     baseUrl                 = null;
     String     baseResourcePath        = null;
+    String     cacheControlHeaderValue = null;
 
     InetAddress localHostAddr; // only used for access checks, iff open_relay stays false
     // MT: end unchanging after init()
@@ -71,6 +74,7 @@ public class SsimServlet extends HttpServlet
 	throws ServletException
     { 
 	this.sc = this.getServletContext();
+	String browserMaxAgeStr     = this.getInitParameter( "browserMaxAge" );
 	String cacheDirStr          = this.getInitParameter( "cacheDir" );
 	String maxWidthStr          = this.getInitParameter( "maxWidth" );
 	String maxHeightStr         = this.getInitParameter( "maxHeight" );
@@ -80,6 +84,17 @@ public class SsimServlet extends HttpServlet
 	String cacheSizeStr         = this.getInitParameter( "cacheSize" );
 	String cullDelayStr         = this.getInitParameter( "cullDelay" );
 	String maxConcurrencyStr    = this.getInitParameter( "maxConcurrency" );
+
+	if (browserMaxAgeStr != null && browserMaxAgeStr.length() > 0) {
+	    try { this.browser_max_age = Integer.parseInt( browserMaxAgeStr ); }
+	    catch ( NumberFormatException e )
+		{ throw new UnavailableException( "Could not parse browserMaxAge init param: " + browserMaxAgeStr ); }
+	}
+
+	if ( browser_max_age > 0 ) 
+	    cacheControlHeaderValue = "max-age=" + browser_max_age + ", public";
+	else
+	    cacheControlHeaderValue = "no-cache";
 
 	// figure out cache dir
 	if (cacheDirStr != null)
@@ -293,6 +308,7 @@ public class SsimServlet extends HttpServlet
 		finally
 		    { exitScale(); }
 
+		res.setHeader("Cache-Control", cacheControlHeaderValue);
 		res.setContentType( data.getMimeType() );
 		int cl = data.getContentLength();
 		if ( cl >= 0 )

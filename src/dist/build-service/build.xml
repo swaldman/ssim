@@ -28,6 +28,7 @@
 	    <token key="allowDomains.init.param" value="${allowDomains.init.param}"/>
 	    <token key="baseResourcePath.init.param" value="${baseResourcePath.init.param}"/>
 	    <token key="baseUrl.init.param" value="${baseUrl.init.param}"/>
+	    <token key="browserMaxAge.init.param" value="${browserMaxAge.init.param}"/>
 	    <token key="cacheDir.init.param" value="${cacheDir.init.param}"/>
 	    <token key="cacheSize.init.param" value="${cacheSize.init.param}"/>
 	    <token key="cullDelay.init.param" value="${cullDelay.init.param}"/>

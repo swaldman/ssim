@@ -218,11 +218,18 @@
 	
 	<strong>baseUrl.init.param=file:///usr/local/web/</strong>
 	cacheDir.init.param=/var/tmp
+	#browserMaxAge.init.param=
 	#cacheSize.init.param=
 	#cullDelay.init.param=
 	#maxWidth.init.param=
 	#maxHeight.init.param=
 	#allowDomains.init.param=
+
+	#
+	# you're unlikely to want this last one.
+	#
+
+	#baseResourcePath.init.param=
       </div>
       You'd run <tt>ant</tt>, then deploy the <tt>images.war</tt> file you'd find under <tt>build-service/dist</tt>,
       under the alias (or in Java-speak <tt>contextPath</tt>) <tt>/scaledimages</tt>. You'd go through your web application
@@ -292,6 +299,13 @@
 	to the return value of <tt>request.getResource("/")</tt> when not specified. 
 	<strong>Only one of <tt>baseResourcePath</tt>
 	and <tt>baseUrl</tt> can be explicitly specified.</strong>
+      </dd>
+      <dt><a name="init_param_browserMaxAge">browserMaxAge</a></dt>
+      <dd>
+	Number of seconds that the browser may cache images served by SSIM.
+	Defaults to 3600 (1 hour). If set to a negative value, browser
+	caching will be disabled. This init parameter controls the <tt>max-age=</tt>
+	clause of the HTTP/1.1 Cache-Control header.
       </dd>
       <dt><a name="init_param_cacheDir">cacheDir</a></dt>
       <dd>

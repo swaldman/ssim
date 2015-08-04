@@ -15,6 +15,7 @@
     <init-param><param-name>allowDomains</param-name><param-value>@allowDomains.init.param@</param-value></init-param>
     <init-param><param-name>baseResourcePath</param-name><param-value>@baseResourcePath.init.param@</param-value></init-param>
     <init-param><param-name>baseUrl</param-name><param-value>@baseUrl.init.param@</param-value></init-param>
+    <init-param><param-name>browserMaxAge</param-name><param-value>@browserMaxAge.init.param@</param-value></init-param>
     <init-param><param-name>cacheDir</param-name><param-value>@cacheDir.init.param@</param-value></init-param>
     <init-param><param-name>cacheSize</param-name><param-value>@cacheSize.init.param@</param-value></init-param>
     <init-param><param-name>cullDelay</param-name><param-value>@cullDelay.init.param@</param-value></init-param>
