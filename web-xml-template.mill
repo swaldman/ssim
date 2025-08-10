@@ -2,18 +2,22 @@ package build
 
 val webAppName = "ssim" // change this to whatever name you want!
 
-// change any of these values that you wish to set!
-// be sure anything you don't wish to set remains "DEFAULT"!
-object InitParam:
-  val allowDomains     = "DEFAULT"
-  val baseResourcePath = "DEFAULT"
-  val baseUrl          = "DEFAULT"
-  val browserMaxAge    = "DEFAULT"
-  val cacheDir         = "DEFAULT"
-  val cacheSize        = "DEFAULT"
-  val cullDelay        = "DEFAULT"
-  val maxWidth         = "DEFAULT"
-  val maxHeight        = "DEFAULT"
+val InitParams : Map[String,Any] = Map(
+  // "allowDomains" -> ???,
+  // "baseResourcePath" -> ???,
+  // "baseUrl" -> ???,
+  // "browserMaxAge" -> ???,
+  // "cacheDir" -> ???,
+  // "cacheSize" -> ???,
+  // "cullDelay" -> ???,
+  // "maxWidth" -> ???,
+  // "maxHeight" -> ???,
+)
+
+def initParamRow( tuple : Tuple2[String,Any] ) : String =
+  s"    <init-param><param-name>${tuple(0)}</param-name><param-value>${tuple(1)}</param-value></init-param>"
+
+def initParamRows = InitParams.map( initParamRow ).mkString( scala.util.Properties.lineSeparator )
 
 lazy val webXmlText =
   s"""|<?xml version="1.0" encoding="ISO-8859-1"?>
@@ -30,15 +34,8 @@ lazy val webXmlText =
       |    <servlet-class>com.mchange.v2.ssim.SsimServlet</servlet-class>
       |
       |    <!-- init params -->
-      |    <init-param><param-name>allowDomains</param-name><param-value>${InitParam.allowDomains}</param-value></init-param>
-      |    <init-param><param-name>baseResourcePath</param-name><param-value>${InitParam.baseResourcePath}</param-value></init-param>
-      |    <init-param><param-name>baseUrl</param-name><param-value>${InitParam.baseUrl}</param-value></init-param>
-      |    <init-param><param-name>browserMaxAge</param-name><param-value>${InitParam.browserMaxAge}</param-value></init-param>
-      |    <init-param><param-name>cacheDir</param-name><param-value>${InitParam.cacheDir}</param-value></init-param>
-      |    <init-param><param-name>cacheSize</param-name><param-value>${InitParam.cacheSize}</param-value></init-param>
-      |    <init-param><param-name>cullDelay</param-name><param-value>${InitParam.cullDelay}</param-value></init-param>
-      |    <init-param><param-name>maxWidth</param-name><param-value>${InitParam.maxWidth}</param-value></init-param>
-      |    <init-param><param-name>maxHeight</param-name><param-value>${InitParam.maxHeight}</param-value></init-param>
+      |${initParamRows}
+      |
       |  </servlet>
       |
       |  <servlet-mapping>
@@ -81,4 +78,4 @@ lazy val webXmlText =
       |    <url-pattern>*.PNG</url-pattern>
       |  </servlet-mapping>
       |
-      |</web-app>""".stripMargin.linesIterator.filterNot( line => line.indexOf("DEFAULT") >= 0 ).mkString( scala.util.Properties.lineSeparator )
+      |</web-app>""".stripMargin

@@ -55,7 +55,7 @@ object `package` extends JavaModule with PublishModule:
     PathRef( Task.dest )
 
   def war : T[PathRef] = Task:
-    val out = Task.dest / s"${webAppName}.jar"
+    val out = Task.dest / s"${webAppName}.war"
     Jvm.createJar(
       jar = out,
       inputPaths = Seq( webXml().path, webInfLib().path )
