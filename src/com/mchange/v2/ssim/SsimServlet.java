@@ -23,8 +23,8 @@
 
 package com.mchange.v2.ssim;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import java.io.*;
 import java.net.*;
 import com.mchange.v1.io.InputStreamUtils;
@@ -100,7 +100,7 @@ public class SsimServlet extends HttpServlet
 	if (cacheDirStr != null)
 	    cacheDir = new File( cacheDirStr.trim() );
 	else
-	    cacheDir = (File) sc.getAttribute( "javax.servlet.context.tempdir" );
+	    cacheDir = (File) sc.getAttribute( sc.TEMPDIR );
 	if (! cacheDir.isDirectory() || ! cacheDir.canWrite())
 	    throw new UnavailableException("Cache directory: " + cacheDir + " does not exist, is not a directory, or is not writable!");
 	else

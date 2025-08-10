@@ -11,7 +11,7 @@ object `package` extends JavaModule with PublishModule:
   override def compileMvnDeps =
     Task:
       super.compileMvnDeps() :+
-      mvn"javax.servlet:javax.servlet-api:4.0.1"
+      mvn"jakarta.servlet:jakarta.servlet-api:6.1.0"
 
   override def mvnDeps =
     Task:
