@@ -1,0 +1,64 @@
+//| mill-version: 1.0.3
+//| mill-jvm-version: 17
+//+---------------------------------------------------------------
+package build
+
+import mill.*, scalalib.*, publish.*
+import mill.util.Jvm
+
+object `package` extends JavaModule with PublishModule:
+
+  override def compileMvnDeps =
+    Task:
+      super.compileMvnDeps() :+
+      mvn"javax.servlet:javax.servlet-api:4.0.1"
+
+  override def mvnDeps =
+    Task:
+      super.mvnDeps() :+
+      mvn"com.mchange:mchange-commons-java:0.3.2"
+
+  val JvmCompatVersion = "8"
+
+  // we don't use the newer --release flag, we intentionally compile against newer API, so newer API is supported
+  // but old JVMs that hit it wil generate NoSuchMethodError or similar at runtime
+  override def javacOptions = Seq("-source",JvmCompatVersion,"-target",JvmCompatVersion)
+
+  override def artifactName = "ssim"
+
+  override def publishVersion = Task("0.7.0-SNAPSHOT")
+
+  override def pomSettings = Task:
+    PomSettings(
+      description = "a library for on-the-fly rescaling & caching of images on a web server.",
+      organization = "com.mchange",
+      url = "https://github.com/swaldman/ssim",
+      licenses = Seq(License.`GPL-2.0-or-later`),
+      versionControl = VersionControl.github("swaldman", "ssim"),
+      developers = Seq(
+        Developer("swaldman", "Steve Waldman", "https://github.com/swaldman")
+      )
+    )
+
+  def webXml : T[PathRef] = Task:
+    val path = Task.dest / "WEB_INF" / "web.xml"
+    os.write.over( path, data = webXmlText, createFolders = true )
+    PathRef( Task.dest )
+
+  def webInfLib : T[PathRef] = Task:
+    val jarPath = jar().path
+    val otherJarPaths = runClasspath().map( _.path ).filter( _.last.endsWith(".jar") )
+    val dirPath = Task.dest / "WEB_INF" / "lib"
+    os.copy( from=jarPath, to=dirPath / s"${artifactName()}-${publishVersion()}.jar", createFolders=true )
+    otherJarPaths.foreach: ojp =>
+      os.copy( from=ojp, to=dirPath / ojp.last, createFolders=true )
+    PathRef( Task.dest )
+
+  def war : T[PathRef] = Task:
+    val out = Task.dest / s"${webAppName}.jar"
+    Jvm.createJar(
+      jar = out,
+      inputPaths = Seq( webXml().path, webInfLib().path )
+    )
+    PathRef(out)
+
