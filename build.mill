@@ -48,7 +48,7 @@ object `package` extends JavaModule with PublishModule:
   def webInfLib : T[PathRef] = Task:
     val jarPath = jar().path
     val otherJarPaths = runClasspath().map( _.path ).filter( _.last.endsWith(".jar") )
-    val dirPath = Task.dest / "WEB_INF" / "lib"
+    val dirPath = Task.dest / "WEB-INF" / "lib"
     os.copy( from=jarPath, to=dirPath / s"${artifactName()}-${publishVersion()}.jar", createFolders=true )
     otherJarPaths.foreach: ojp =>
       os.copy( from=ojp, to=dirPath / ojp.last, createFolders=true )
