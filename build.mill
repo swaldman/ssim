@@ -41,7 +41,7 @@ object `package` extends JavaModule with PublishModule:
     )
 
   def webXml : T[PathRef] = Task:
-    val path = Task.dest / "WEB_INF" / "web.xml"
+    val path = Task.dest / "WEB-INF" / "web.xml"
     os.write.over( path, data = webXmlText, createFolders = true )
     PathRef( Task.dest )
 
