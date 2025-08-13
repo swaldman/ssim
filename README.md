@@ -1,6 +1,6 @@
-# ssim
+# ssim (Server Side Image Manager)
 
-_**"server side image manager" — a kind of ancient (2003) library for on-the-fly rescaling &amp; caching of images on a web server**_
+_**a kind of ancient (2003) library for on-the-fly rescaling &amp; caching of images on a web server**_
 
 ---
 
