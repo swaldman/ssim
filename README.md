@@ -117,11 +117,13 @@ Any path that resolves to a URL via the `PatternReplacementMap` will be retrieve
 
 ## Appendix A: Initialization Parameters
 
-* `allowDomains` &mdash; A comma separated list of domains from which SSIM should be willing to fetch, scale, and reserve images, when requests contain an explicit imageUrl parameter. If not specified, only imageUrls from the same subdomain as the request, or to localhost if you are running locally, will be allowed. If set to the special value all, the Servlet will be allowed to retrieve and scale images from any URL. If set to the special value none specifying imageUrl as a request parameter is forbidden will result in an error.
+* `allowDomains` &mdash; A comma separated list of domains from which SSIM should be willing to fetch, scale, and reserve images, when requests contain an explicit imageUrl parameter. If not specified, only imageUrls from the same subdomain as the request, or to localhost if you are running locally, will be allowed. If set to the special value `all`, the Servlet will be allowed to retrieve and scale images from any URL. If set to the special value `none` specifying imageUrl as a request parameter is forbidden will result in an error.
 
 * `baseResourcePath` &mdash; A path, relative to the root of the web-application in which an SSIMServlet is running, that should be prepended to pathInfo in finding source images (when no explicit imageUrl is specified). Effectively defaults to / when not specified. **Only one of baseResourcePath and baseUrl can be explicitly specified.**
 
-* `baseUrl` &mdash; A url that should be prepended to pathInfo in finding source images (when no explicit imageUrl is specified). This URL can be a file: URL, allowing you to keep your source images separate from your web application. Effectively defaults to the return value of request.getResource("/") when not specified. **Only one of baseResourcePath and baseUrl can be explicitly specified.**
+* `baseUrl` &mdash; A url that should be prepended to pathInfo in finding source images (when no explicit imageUrl is specified). This URL can be a file: URL, allowing you to keep your source images separate from your web application. Effectively defaults to the return value of `request.getResource("/")` when not specified. **Only one of baseResourcePath and baseUrl can be explicitly specified.**
+
+* `browserMaxAge` &mdash; Controls how long, in seconds, browsers should be instructed to cache scaled images on the client side (using the `Cache-Control` HTTP header). Defaults to 3600 seconds. If less than or equal to zero, the browser will be instructed not to cache at all (via  `Cache-Control: no-cache`).
 
 * `cacheDir` &mdash; The absolute path to a directory where SSIM can put its image cache. It is strongly recommended that you supply this parameter, as it defaults to the web application's temporary directory, which may not be retained between web-app restarts. _**Note that this directory must exist and be writable by the Java servlet container (e.g. tomcat).**_
 
