@@ -16,7 +16,7 @@ object `package` extends JavaModule with PublishModule:
   override def mvnDeps =
     Task:
       super.mvnDeps() :+
-      mvn"com.mchange:mchange-commons-java:0.3.2"
+      mvn"com.mchange:mchange-commons-java:0.4.0"
 
   val JvmCompatVersion = "8"
 
