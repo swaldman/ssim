@@ -56,7 +56,7 @@ The servlet accepts a bunch of initialization parameters, which are described in
 
 You can plug SSIM into apache or other webservers and let it manage your images for you. You'll have to figure out how to run Java servlets and web applications in combination with your webserver. One common configuration is to use the Apache webserver, Apache Jakarta Tomcat, and mod_jk or mod_jk2. You'll also need to install Apache Ant.
 
-To set this up, make a clone or branch of this distributionm and modify the file `web-xml-template.mill`. 
+To set this up, make a clone or branch of this distribution and modify the file `web-xml-template.mill`.
 
 * Uncomment and fill in values for `InitParams in that file.
   (Quoted strings or unquoted integer values are fine.) 
