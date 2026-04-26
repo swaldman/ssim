@@ -16,7 +16,7 @@ object `package` extends JavaModule with PublishModule:
   override def mvnDeps =
     Task:
       super.mvnDeps() :+
-      mvn"com.mchange:mchange-commons-java:0.4.0"
+      mvn"com.mchange:mchange-commons-java:0.5.0"
 
   val JvmCompatVersion = "8"
 
@@ -26,7 +26,7 @@ object `package` extends JavaModule with PublishModule:
 
   override def artifactName = "ssim"
 
-  override def publishVersion = Task("0.7.0")
+  override def publishVersion = Task("0.7.1")
 
   override def pomSettings = Task:
     PomSettings(
